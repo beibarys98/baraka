@@ -3,6 +3,7 @@
 namespace frontend\controllers;
 
 use common\models\Orders;
+use common\models\OrderItem;
 use common\models\search\OrdersSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
@@ -10,6 +11,7 @@ use yii\filters\VerbFilter;
 use common\models\search\ItemsSearch;
 use yii\data\ActiveDataProvider;
 use Yii;
+use yii\web\Response;
 
 /**
  * OrdersController implements the CRUD actions for Orders model.
@@ -106,20 +108,59 @@ class OrdersController extends Controller
         ]);
     }
 
-    public function actionAddItem($orderId)
+    public function actionAddItem()
     {
-        $model = new \common\models\OrderItem();
-        $model->order_id = $orderId; // link item to the order
-        
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            Yii::$app->session->setFlash('success', 'Тауар сәтті қосылды!');
-            return $this->redirect(['create', 'id' => $orderId]); // back to order create page
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+        $orderId = Yii::$app->request->post('orderId');
+        $itemId  = Yii::$app->request->post('itemId');
+
+        if (!$orderId || !$itemId) {
+            return ['success' => false, 'message' => 'Missing parameters'];
         }
 
-        return $this->renderAjax('_add_item', [
-            'model' => $model,
+        $item = \common\models\Items::findOne($itemId); // the product/item
+        if (!$item || $item->quantity <= 0) {
+            return ['success' => false, 'message' => 'Item out of stock'];
+        }
+
+        $orderItem = OrderItem::findOne([
+            'order_id' => $orderId,
+            'item_id' => $itemId,
         ]);
+
+        if ($orderItem) {
+            if ($item->quantity < 1) {
+                return ['success' => false, 'message' => 'Cannot add more, stock depleted'];
+            }
+            $orderItem->quantity++;
+        } else {
+            $orderItem = new OrderItem([
+                'order_id' => $orderId,
+                'item_id' => $itemId,
+                'quantity' => 1,
+            ]);
+        }
+
+        if ($orderItem->save()) {
+            // decrease stock in Items table
+            $item->quantity--;
+            $item->save(false);
+
+            return [
+                'success' => true,
+                'itemId' => $itemId,
+                'quantity' => $orderItem->quantity,
+                'stock' => $item->quantity
+            ];
+        }
+
+        return ['success' => false, 'errors' => $orderItem->errors];
     }
+
+
+
+
 
 
     /**

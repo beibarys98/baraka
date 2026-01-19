@@ -32,7 +32,7 @@ class Items extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['quantity'], 'default', 'value' => 1],
+            [['quantity'], 'default', 'value' => 0],
             [['price'], 'default', 'value' => 0],
             [['title'], 'required'],
             [['quantity'], 'integer'],

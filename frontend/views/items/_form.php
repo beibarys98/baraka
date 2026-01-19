@@ -12,11 +12,12 @@ use yii\bootstrap5\ActiveForm;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <?= $form->field($model, 'title')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'title')->textInput(['maxlength' => true, 'autofocus' => true]) ?>
 
-    <?= $form->field($model, 'quantity')->textInput() ?>
+    <?= $form->field($model, 'quantity')->input('number') ?>
 
-    <?= $form->field($model, 'price')->textInput(['maxlength' => true]) ?>
+    <?= $form->field($model, 'price')->input('number') ?>
+
 
     <div class="form-group">
         <?= Html::submitButton('Сақтау', ['class' => 'btn btn-success']) ?>
