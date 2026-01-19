@@ -124,7 +124,7 @@ $(document).on('click', '.add-item-btn', function () {
         alert('Cannot add, item out of stock');
         return;
     }
-
+ 
     $.post('$addUrl', {
         orderId: orderId,
         itemId: itemId,
